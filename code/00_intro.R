@@ -64,3 +64,4 @@ cor.test(x, y, method = "spearman")
 ## covariance
 cov(x, y)
 
+cov(x, y)/(sd(x) * sd(y))
