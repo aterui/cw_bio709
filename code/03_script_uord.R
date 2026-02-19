@@ -188,3 +188,6 @@ df_nmds_bci %>%
 
 # 3. Perform PERMANOVA to examine if communities are grouped
 #    by the environmental variable you selected.
+
+adonis2(formula = m_bray_bci ~ habitat,
+        data = df_nmds_bci)
