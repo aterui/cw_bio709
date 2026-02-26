@@ -18,11 +18,10 @@ data("keeley")
 # ------------------------------------------------------------
 # Column descriptions:
 # elev  : Elevation of the site
-# slope : Slope steepness
-# aspect: Slope aspect (orientation)
-# heat  : Heat load index (a function of slope and aspect)
+# abiotic : Abiotic environmental factors (integrated variable indicating the suitability of the habitat)
+# age   : Stand age
+# hetero  : Environmental heterogeneity
 # firesev: Fire severity
-# age   : Time since last fire
 # cover : Vegetation cover
 # rich  : Plant species richness
 # ------------------------------------------------------------
