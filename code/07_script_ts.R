@@ -266,7 +266,7 @@ m_male <- df_mu %>%
   arrange(year) %>% 
   { auto.arima(y = .$w,
                xreg = .$cprcp,
-               stepwise = FALSE, 
+               stepwise = FALSE,
                d = 0) }
 
 confint(m_male)
