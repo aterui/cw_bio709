@@ -114,6 +114,59 @@ auto.arima(
   ic = "aic"
 )
 
+## ARIMAX model
+data("ntl_icecover")
+
+df_ice <- ntl_icecover %>% 
+  as_tibble() %>% 
+  filter(between(year, 1980, 2014),
+         lakeid == "Lake Mendota") %>% 
+  arrange(year)
+
+# Download daily climate data from Daymet for Lake Mendota
+list_mendota <- download_daymet(
+  site = "Lake_Mendota",   # Arbitrary name you assign to this site
+  lat = 43.1,              # Latitude of the lake
+  lon = -89.4,             # Longitude of the lake
+  start = 1980,            # Start year
+  end = 2024,              # End year
+  internal = TRUE          # Return the data as an R object rather than saving to disk
+)
+
+df_temp <- list_mendota$data %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    date = as.Date(
+      paste(year, yday, sep = "-"),
+      format = "%Y-%j"
+    ),
+    month = month(date)
+  ) %>% 
+  arrange(year, yday) %>% 
+  group_by(year) %>% 
+  summarize(temp_min = round(mean(tmin_deg_c), 2)) 
+
+df_ice <- df_ice %>% 
+  left_join(df_temp, by = "year")
+
+# Don't
+# lm(ice_duration ~ temp_min, data = df_ice)
+
+# Do
+obj_arima <- auto.arima(
+  y = df_ice$ice_duration,
+  xreg = df_ice$temp_min,
+  stepwise = FALSE
+)
+
+confint(obj_arima)
+
+df_ice %>% 
+  ggplot(aes(x = temp_min,
+             y = ice_duration)) +
+  geom_point()
+
 # lab ---------------------------------------------------------------------
 
 # ============================================================
@@ -140,10 +193,28 @@ library(lterdatasampler)
 #    - Inspect variable types and missing values.
 #    - Reformat variables as needed for analysis.
 
+sapply(knz_bison,
+       FUN = function(x) {
+         sum(is.na(x))
+       })
+
+df_knz <- knz_bison %>% 
+  drop_na(animal_weight)
+
 # 2. Subset the data to include observations from 1994–2012.
+
+df_knz <- df_knz %>% 
+  filter(between(rec_year, 1994, 2012)) %>% 
+  rename(year = rec_year)
 
 # 3. Calculate the average body mass for female and male bison
 #    for each year in the selected time period.
+
+df_mu <- df_knz %>% 
+  group_by(year,
+           animal_sex) %>% 
+  summarize(w = mean(animal_weight),
+            .groups = "drop")
 
 # 4. Obtain climate data from the daymetr dataset.
 #    - Identify relevant climate variables (e.g., temperature,
@@ -151,10 +222,64 @@ library(lterdatasampler)
 #    - Associate climate data with knz_bison by year.
 #    - Coordinates: Lat 39.09300	Lon -96.57500
 
+# Download daily climate data from Daymet for Lake Mendota
+df_clim_knz <- download_daymet(
+  site = "Konza",
+  lat = 39.09300,
+  lon = -96.57500,
+  start = 1994,            # Start year
+  end = 2012,              # End year
+  internal = TRUE          # Return the data as an R object rather than saving to disk
+) %>% 
+  {.[["data"]]} %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(
+    date = as.Date(paste(year, yday, sep = "-"),
+                   format = "%Y-%j")
+  ) %>% 
+  relocate(date)
+
+df_clim_mu <- df_clim_knz %>% 
+  group_by(year) %>% 
+  summarize(cprcp = sum(prcp_mm_day))
+
+df_mu <- df_mu %>% 
+  left_join(df_clim_mu,
+            by = "year")
+
+df_mu %>% 
+  ggplot(
+    aes(x = year,
+        y = w,
+        color = animal_sex)
+  ) +
+  geom_point()
+
 # 5. Perform a time-series analysis to examine whether selected
 #    climate variables influence annual bison body mass.
 #    - Consider temporal autocorrelation and lag effects.
 #    - Model males and females separately
+
+m_male <- df_mu %>% 
+  filter(animal_sex == "M") %>% 
+  arrange(year) %>% 
+  { auto.arima(y = .$w,
+               xreg = .$cprcp,
+               stepwise = FALSE, 
+               d = 0) }
+
+confint(m_male)
+
+m_female <- df_mu %>% 
+  filter(animal_sex == "F") %>% 
+  arrange(year) %>% 
+  { auto.arima(y = .$w,
+               xreg = .$cprcp,
+               stepwise = FALSE, 
+               d = 0) }
+
+confint(m_female)
 
 # 6. Using your fitted model, compare observed bison body mass
 #    with predicted values for the period 2014–2020.
