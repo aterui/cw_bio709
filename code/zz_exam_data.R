@@ -152,3 +152,15 @@ saveRDS(df_emg, "data_fmt/data_insect_emergence.rds")
 ## Ordination
 nutrient <- rnorm(nrow(trees), -50 + 0.8 * trees$Height, sd = 1)
 saveRDS(nutrient, "data_fmt/nutrient.rds")
+
+## time series
+
+df_nile <- tibble(
+  year = time(Nile),
+  discharge = as.numeric(Nile)
+)
+
+df_sunspot <- tibble(
+  year = time(sunspot.year),
+  sunspots = as.numeric(sunspot.year)
+)
