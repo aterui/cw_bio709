@@ -34,12 +34,14 @@ df_inv <- readRDS(url(link2, "rb"))
 # This dataset 'df_inv' contains 100 observations from 10 lakes.
 # Within each lake, 10 plots were established, spaced ~500 m apart.
 # At each plot, the following variables were measured:
+
+# s          : Species richness of invertebrates associated with aquatic plants at each plot
+# hb         : Standing biomass of invertebrates associated with aquatic plants at each plot
+# prod       : Production rate of aquatic plants (macrophytes), measured as g/month
+# substrate  : Median diameter of substrate materials (mm)
 # cond       : Water electrical conductivity (µS/cm);
 #              a proxy for ionized nutrient levels (higher values may indicate eutrophication)
-# substrate  : Median diameter of substrate materials (mm)
-# prod       : Production rate of aquatic plants (macrophytes), measured as g/month
-# hb         : Standing biomass of invertebrates associated with aquatic plants at each plot
-# s          : Species richness of invertebrates associated with aquatic plants at each plot
+# lake       : lake ID
 
 # Researcher's hypothesis was that: 
 # (a) conductivity influences the productivity of macrophyes.
@@ -59,7 +61,7 @@ df_inv <- readRDS(url(link2, "rb"))
 #     [1 point]
 
 # Q4. Test hypothesis (a) by modeling macrophyte production while
-#     statistically controlling for potential confounding variables.
+#     statistically controlling for potential confounding variables ('substrate', 'lake').
 #     [3 points]
 
 # Q5. Test hypotheses (a–c) simultaneously using a unified modeling framework.
@@ -101,12 +103,12 @@ print(trees)
 
 # dataset 4 ---------------------------------------------------------------
 
-df_nile <- tibble(
+df_nile <- dplyr::tibble(
   year = time(Nile), # observation year
   discharge = as.numeric(Nile) # discharge
 )
 
-df_sunspot <- tibble(
+df_sunspot <- dplyr::tibble(
   year = time(sunspot.year), # observation year
   sunspots = as.numeric(sunspot.year) # the number of sunspots
 )
